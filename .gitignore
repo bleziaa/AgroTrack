@@ -1,0 +1,12 @@
+.venv/
+.env
+.pgdata/
+.pgsocket/
+*.log
+__pycache__/
+accesos-locales.txt
+
+work/
+*.pyc
+.env.*
+!.env.example

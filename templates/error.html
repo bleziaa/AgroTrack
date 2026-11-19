@@ -1,0 +1,1 @@
+{% extends 'base.html' %}{% block content %}<section class="panel confirm"><p class="eyebrow">{{ title }}</p><h1>No pudimos continuar.</h1><p>{{ message }}</p><a class="btn primary" href="{{ url_for('dashboard') if g.user else url_for('login') }}">Volver al inicio</a></section>{% endblock %}

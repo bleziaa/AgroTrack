@@ -1,0 +1,4 @@
+{% extends 'base.html' %}{% block content %}
+<header class="page-head"><div><p class="eyebrow">ADMINISTRACIÓN</p><h1>Usuarios y roles</h1><p class="muted">Administrador: registra y modifica datos y crea usuarios. Consulta: revisa y exporta información.</p></div><a class="btn primary" href="{{ url_for('create_user') }}">+ Crear usuario</a></header>
+<section class="panel"><div class="table-wrap"><table><thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Estado</th></tr></thead><tbody>{% for u in rows %}<tr><td>{{ u.nombre }}</td><td>{{ u.correo }}</td><td>{{ u.rol }}</td><td>{{ 'Activo' if u.activo else 'Inactivo' }}</td></tr>{% endfor %}</tbody></table></div></section>
+{% endblock %}

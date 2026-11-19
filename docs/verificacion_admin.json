@@ -1,0 +1,12 @@
+{
+  "fecha_utc": "2026-11-17T16:00:05.408578+00:00",
+  "pruebas": [
+    "Alta e inicio de sesión real: administrador; permisos verificados",
+    "Alta e inicio de sesión real: consulta; permisos verificados",
+    "Rechazo de duplicados, nombre, correo, rol, contraseña, confirmación y CSRF",
+    "Productor → finca con selección automática; alta real de finca y cultivo, duplicados, vacíos y referencia inválida",
+    "Accesos visibles según rol y contraseñas ausentes de listados",
+    "Registros temporales eliminados; contenido original idéntico antes y después (secuencias pueden avanzar)"
+  ],
+  "resultado": "correcto"
+}

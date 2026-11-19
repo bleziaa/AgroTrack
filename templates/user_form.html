@@ -1,0 +1,10 @@
+{% extends 'base.html' %}{% block content %}
+<header class="page-head"><div><p class="eyebrow">ADMINISTRACIÓN</p><h1>Crear usuario</h1><p class="muted">Asigna el acceso que necesita esta persona.</p></div><a class="btn secondary" href="{{ url_for('users') }}">← Volver</a></header>
+<section class="panel form-panel"><form method="post"><input type="hidden" name="csrf" value="{{ csrf }}"><div class="form-grid">
+<div><label for="nombre">Nombre completo</label><input id="nombre" name="nombre" required minlength="2" maxlength="120" autocomplete="name" value="{{ row.get('nombre','') }}"></div>
+<div><label for="correo">Correo</label><input id="correo" name="correo" type="email" required maxlength="254" autocomplete="email" value="{{ row.get('correo','') }}"></div>
+<div><label for="rol">Rol</label><select id="rol" name="rol" required><option value="">Seleccionar…</option><option value="administrador" {{ 'selected' if row.get('rol')=='administrador' }}>Administrador</option><option value="consulta" {{ 'selected' if row.get('rol')=='consulta' }}>Consulta</option></select><small>Administrador puede realizar cambios y crear usuarios. Consulta solo lee y exporta.</small></div>
+<div><label for="clave">Contraseña (12 a 128 caracteres)</label><input id="clave" name="clave" type="password" required minlength="12" maxlength="128" autocomplete="new-password"></div>
+<div><label for="confirmar_clave">Confirmar contraseña</label><input id="confirmar_clave" name="confirmar_clave" type="password" required minlength="12" maxlength="128" autocomplete="new-password"></div>
+</div><div class="form-footer"><p>Comparte el acceso con la persona de forma privada. La contraseña se almacena protegida.</p><div class="actions"><a class="btn secondary" href="{{ url_for('users') }}">Cancelar</a><button class="btn primary">Crear usuario</button></div></div></form></section>
+{% endblock %}

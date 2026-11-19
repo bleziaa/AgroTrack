@@ -1,0 +1,48 @@
+{
+  "fecha_utc": "2026-11-17T15:58:28.053295+00:00",
+  "entorno": "PostgreSQL real y cliente HTTP de Flask",
+  "datos": "Ficticios; pruebas temporales eliminadas",
+  "pruebas": [
+    {
+      "prueba": "Inicio de sesión de ambos roles",
+      "resultado": "correcto"
+    },
+    {
+      "prueba": "Permisos en servidor, sesión inválida y CSRF",
+      "resultado": "correcto"
+    },
+    {
+      "prueba": "Pantallas, formularios y exportaciones de todos los módulos",
+      "resultado": "correcto"
+    },
+    {
+      "prueba": "Inserción real en los diez módulos",
+      "resultado": "correcto"
+    },
+    {
+      "prueba": "Edición real y lectura posterior en todos los módulos",
+      "resultado": "correcto"
+    },
+    {
+      "prueba": "Filtros combinados y CSV coincidente",
+      "resultado": "correcto"
+    },
+    {
+      "prueba": "Función SQL, agregados, existencias y saldo",
+      "resultado": "correcto"
+    },
+    {
+      "prueba": "Protección de dependencias, sobreventa, reducción, negativos y ciclo duplicado",
+      "resultado": "correcto"
+    },
+    {
+      "prueba": "Ventas concurrentes sobre la misma cosecha: una confirmada y otra rechazada",
+      "resultado": "correcto"
+    },
+    {
+      "prueba": "Eliminación real de registros de prueba respetando dependencias",
+      "resultado": "correcto"
+    }
+  ],
+  "alcance": "No acredita validación con una comunidad real ni prueba de producción."
+}

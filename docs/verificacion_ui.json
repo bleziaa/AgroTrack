@@ -1,0 +1,13 @@
+{
+  "fecha_utc": "2026-11-17T16:02:10.948251+00:00",
+  "pruebas": [
+    "Inicio de sesión de administrador en navegador",
+    "Accesos Crear finca, Registrar producto / cultivo y Crear usuario visibles",
+    "Alta de finca por formulario y lectura en listado",
+    "Alta de cultivo por formulario y lectura en listado",
+    "Listado de usuarios y formulario con ambos roles revisados visualmente",
+    "Finca y cultivo temporales eliminados; registros originales idénticos por comparación de contenido"
+  ],
+  "resultado": "correcto",
+  "alcance": "Las altas de usuarios y restricciones de ambos roles se probaron con cliente HTTP de Flask y PostgreSQL real; el formulario de usuarios se inspeccionó en navegador."
+}
