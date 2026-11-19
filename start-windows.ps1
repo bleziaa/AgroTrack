@@ -14,13 +14,17 @@ $venv = Join-Path $PSScriptRoot ".venv/Scripts/python.exe"
 if ($LASTEXITCODE -ne 0) { throw "No se pudieron instalar las dependencias." }
 if (-not (Test-Path ".env")) {
   Write-Host "Primera ejecucion. PostgreSQL debe estar instalado y en marcha."
-  $adminDsn = Read-Host "DSN de administrador PostgreSQL (ej.: host=localhost port=5432 dbname=postgres user=postgres password=...)"
+  $secureDsn = Read-Host "DSN de administrador PostgreSQL (entrada oculta)" -AsSecureString
+  $adminDsn = [System.Net.NetworkCredential]::new("", $secureDsn).Password
   if ([string]::IsNullOrWhiteSpace($adminDsn)) { throw "Falta el DSN." }
   $env:POSTGRES_ADMIN_DSN = $adminDsn
   try {
     & $venv setup_windows.py
     if ($LASTEXITCODE -ne 0) { throw "Inicializacion fallida; revisa la base antes de reintentar." }
-  } finally { Remove-Item Env:POSTGRES_ADMIN_DSN -ErrorAction SilentlyContinue }
+  } finally {
+    Remove-Item Env:POSTGRES_ADMIN_DSN -ErrorAction SilentlyContinue
+    Remove-Variable adminDsn, secureDsn -ErrorAction SilentlyContinue
+  }
 }
 Write-Host "Abre http://127.0.0.1:5084 ; Ctrl+C para detener la aplicacion."
 & $venv app.py
