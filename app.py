@@ -4,11 +4,13 @@ import io
 import os
 import re
 import secrets
+import sys
+import webbrowser
 from contextlib import contextmanager
 from datetime import date
 from decimal import Decimal, InvalidOperation
 from functools import wraps
-from pathlib import Path
+from threading import Timer
 
 import psycopg
 from psycopg import sql
@@ -17,10 +19,12 @@ from flask import Flask, abort, flash, g, redirect, render_template, request, se
 from werkzeug.security import check_password_hash, generate_password_hash
 
 
+from paths import DATA_DIR
+
 def load_env():
-    p = Path(__file__).with_name('.env')
+    p = DATA_DIR / '.env'
     if p.exists():
-        for line in p.read_text().splitlines():
+        for line in p.read_text(encoding='utf-8-sig').splitlines():
             if line and not line.startswith('#') and '=' in line:
                 key, value = line.split('=', 1)
                 os.environ.setdefault(key, value)
@@ -28,7 +32,7 @@ def load_env():
 
 load_env()
 app = Flask(__name__)
-app.config.update(SECRET_KEY=os.environ['SECRET_KEY'], SESSION_COOKIE_HTTPONLY=True,
+app.config.update(SECRET_KEY=os.environ.get('SECRET_KEY'), SESSION_COOKIE_HTTPONLY=True,
                   SESSION_COOKIE_SAMESITE='Lax', SESSION_COOKIE_SECURE=os.getenv('HTTPS') == '1',
                   MAX_CONTENT_LENGTH=128 * 1024)
 
@@ -433,5 +437,32 @@ def http_error(exc):
     return render_template('error.html',title=str(exc.code),message=exc.description),exc.code
 
 
-if __name__=='__main__':
-    app.run(host='127.0.0.1',port=int(os.getenv('PORT','5084')),debug=False)
+def main():
+    if '--setup' in sys.argv:
+        from setup_database import initialize
+        initialize()
+        return
+    if not app.secret_key or not os.environ.get('DATABASE_URL'):
+        raise SystemExit('Falta SECRET_KEY o DATABASE_URL. Revisa .env o inicializa AgroTrack con --setup.')
+    try:
+        with db(True) as conn:
+            conn.execute('SELECT 1 FROM usuario LIMIT 1')
+    except psycopg.Error as error:
+        raise SystemExit(f'No se pudo comprobar PostgreSQL y el esquema de AgroTrack ({type(error).__name__}).') from None
+    if '--check' in sys.argv:
+        print('Configuración, conexión PostgreSQL y esquema verificados.')
+        return
+    from waitress import create_server
+    port = int(os.getenv('PORT', '5084'))
+    url = f'http://127.0.0.1:{port}'
+    server = create_server(app, host='127.0.0.1', port=port)
+    print(f'AgroTrack disponible en {url}. Ctrl+C para detenerlo.', flush=True)
+    if '--open-browser' in sys.argv:
+        browser = Timer(0.2, webbrowser.open, args=(url,))
+        browser.daemon = True
+        browser.start()
+    server.run()
+
+
+if __name__ == '__main__':
+    main()

@@ -31,3 +31,7 @@ El esquema completo y sus funciones están en sql/schema.sql. La arquitectura, d
 ## Comprobación reproducible
 
 Con la instalación inicializada, ejecuta `.venv/bin/python verificar.py`. Las pruebas usan las credenciales locales, comprueban ambos roles, operaciones CRUD, filtros, exportación, totales e integridad. Crean y eliminan registros de prueba y dejan constancia en docs/verificacion.json. Las secuencias pueden avanzar durante intentos rechazados; los identificadores no son contadores de filas.
+
+## Paquetes para usuarios finales
+
+Consulta [la guía de distribución](DISTRIBUCION.md).
