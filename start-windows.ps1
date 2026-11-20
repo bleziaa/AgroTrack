@@ -26,6 +26,16 @@ if (-not (Test-Path ".env")) {
     Remove-Variable adminDsn, secureDsn -ErrorAction SilentlyContinue
   }
 }
-Write-Host "Abre http://127.0.0.1:5084 ; Ctrl+C para detener la aplicacion."
-& $venv app.py
-exit $LASTEXITCODE
+$url = "http://127.0.0.1:5084/login"
+$browserJob = Start-Job -ArgumentList $url -ScriptBlock {
+  param($target)
+  for ($i = 0; $i -lt 60; $i++) {
+    try {
+      $response = Invoke-WebRequest -Uri $target -TimeoutSec 2 -UseBasicParsing
+      if ($response.StatusCode -ge 200) { Start-Process $target; break }
+    } catch { Start-Sleep -Milliseconds 500 }
+  }
+}
+Write-Host "Iniciando AgroTrack; se abrira el navegador cuando responda. Ctrl+C para detener."
+try { & $venv app.py; exit $LASTEXITCODE }
+finally { Stop-Job $browserJob -ErrorAction SilentlyContinue; Remove-Job $browserJob -Force -ErrorAction SilentlyContinue }
