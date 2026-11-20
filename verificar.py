@@ -1,5 +1,6 @@
 """Pruebas de integración sobre PostgreSQL real; no sustituyen validación comunitaria."""
 import json
+import os
 import re
 import secrets
 import threading
@@ -10,10 +11,11 @@ from pathlib import Path
 import psycopg
 from psycopg import sql
 from app import app, db, MODULES
+from paths import DATA_DIR
 
 app.config['TESTING']=True
 root=Path(__file__).resolve().parent
-lines=(root/'accesos-locales.txt').read_text().splitlines()
+lines=(DATA_DIR/'accesos-locales.txt').read_text(encoding='utf-8').splitlines()
 admin_password=lines[lines.index('admin@agrotrack.local')+1]
 viewer_password=lines[lines.index('consulta@agrotrack.local')+1]
 results=[]
@@ -192,5 +194,5 @@ finally:
 
 results.append({'prueba':'Eliminación real de registros de prueba respetando dependencias','resultado':'correcto'})
 report={'fecha_utc':datetime.now(timezone.utc).isoformat(),'entorno':'PostgreSQL real y cliente HTTP de Flask','datos':'Ficticios; pruebas temporales eliminadas','pruebas':results,'alcance':'No acredita validación con una comunidad real ni prueba de producción.'}
-(root/'docs/verificacion.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
+(Path(os.environ.get('AGROTRACK_TEST_REPORT_DIR', root / 'docs')) / 'verificacion.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n', encoding='utf-8')
 print(json.dumps(report,ensure_ascii=False,indent=2))

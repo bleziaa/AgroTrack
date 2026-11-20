@@ -10,3 +10,7 @@ work/
 *.pyc
 .env.*
 !.env.example
+
+/build/
+/dist/
+*.spec

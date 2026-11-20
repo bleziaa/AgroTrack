@@ -3,12 +3,14 @@ import getpass
 import psycopg
 import hashlib
 import json
+import os
 import secrets
 from pathlib import Path
 from datetime import datetime, timezone
 from werkzeug.security import check_password_hash
 from app import app, db, MODULES
 from psycopg import sql
+from psycopg.conninfo import make_conninfo
 app.config['TESTING']=True
 client=app.test_client()
 created=[]
@@ -74,10 +76,13 @@ try:
         assert pwd not in ui.get('/usuarios').get_data(as_text=True)
     checks.append('Accesos visibles según rol y contraseñas ausentes de listados')
 finally:
-    with psycopg.connect(host=str(Path('.pgsocket').resolve()),port=55438,dbname='agrotrack',user=getpass.getuser()) as c:
+    admin_dsn = os.environ.get('POSTGRES_ADMIN_DSN') or make_conninfo(
+        host=str(Path('.pgsocket').resolve()), port=55438, user=getpass.getuser()
+    )
+    with psycopg.connect(make_conninfo(admin_dsn, dbname='agrotrack')) as c:
         for table,rid in reversed(created):c.execute(sql.SQL('DELETE FROM {} WHERE id=%s').format(sql.Identifier(table)),(rid,))
 assert snapshot()==before,'Los registros originales cambiaron'
 checks.append('Registros temporales eliminados; contenido original idéntico antes y después (secuencias pueden avanzar)')
 report={'fecha_utc':datetime.now(timezone.utc).isoformat(),'pruebas':checks,'resultado':'correcto'}
-Path('docs/verificacion_admin.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
+(Path(os.environ.get('AGROTRACK_TEST_REPORT_DIR', 'docs')) / 'verificacion_admin.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n', encoding='utf-8')
 print(json.dumps(report,ensure_ascii=False,indent=2))
