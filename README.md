@@ -1,8 +1,27 @@
 # AgroTrack
 
-Primera versión funcional para Base de Datos II: gestión de productores, fincas, parcelas, cultivos, ciclos, cosechas, clientes, ventas, detalles de venta y gastos. Dos roles, filtros combinables, exportación CSV y reportes por ciclo. PostgreSQL + Flask + HTML/CSS, sin servicios externos durante el uso local.
+Sistema web local para administrar la operación de una unidad agrícola. Registra productores, fincas, parcelas, productos y cultivos, ciclos de siembra, cosechas, clientes, ventas, detalles de venta y gastos. Incluye roles de administrador y consulta, filtros, exportación CSV y reportes por ciclo.
 
-## Ejecución local en Linux
+## Tecnologías y arquitectura
+
+- Python 3 con Flask y plantillas Jinja.
+- PostgreSQL como base de datos relacional.
+- Psycopg 3 para consultas parametrizadas y transacciones.
+- CSS para la interfaz web.
+- Waitress para servir la aplicación local empaquetada.
+- PyInstaller para distribuir una aplicación con el runtime de Python incluido.
+
+El navegador muestra la interfaz y Flask procesa rutas, autenticación, permisos, validaciones y operaciones CRUD. PostgreSQL guarda los registros y aplica las relaciones e integridad del esquema. La instalación desde código en Linux puede iniciar un clúster privado del proyecto. Los paquetes descargables requieren PostgreSQL instalado o accesible.
+
+## Funcionalidades principales
+
+- Inicio de sesión con roles de administrador y consulta.
+- Administración de productores, usuarios, fincas, parcelas, cultivos, ciclos, cosechas, clientes, ventas, detalles y gastos.
+- Búsqueda y filtros combinables, reportes por ciclo y exportación CSV.
+- Protección contra modificaciones por cuentas de consulta y respeto de las dependencias de la base de datos.
+- Datos demostrativos ficticios claramente identificados.
+
+## Ejecución desde el código fuente en Linux
 
 Requiere PostgreSQL con initdb/pg_ctl disponibles en PATH y Python con venv/pip. En la carpeta del proyecto:
 
@@ -32,6 +51,9 @@ El esquema completo y sus funciones están en sql/schema.sql. La arquitectura, d
 
 Con la instalación inicializada, ejecuta `.venv/bin/python verificar.py`. Las pruebas usan las credenciales locales, comprueban ambos roles, operaciones CRUD, filtros, exportación, totales e integridad. Crean y eliminan registros de prueba y dejan constancia en docs/verificacion.json. Las secuencias pueden avanzar durante intentos rechazados; los identificadores no son contadores de filas.
 
-## Paquetes para usuarios finales
+## Ejecutables para Windows y Linux
+
+Descarga la aplicación autocontenida desde [GitHub Releases](https://github.com/bleziaa/AgroTrack/releases/tag/cross-v0.1.0). Se incluye Python, pero se necesita PostgreSQL en ejecución. La configuración inicial solicita un DSN de administración, crea la base y genera credenciales locales. La instalación desde código fuente en Linux puede iniciar un clúster privado del proyecto.
 
 Consulta [la guía de distribución](DISTRIBUCION.md).
+
