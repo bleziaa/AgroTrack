@@ -19,4 +19,18 @@ fi
 if [ ! -f .env ]; then
   .venv/bin/python setup_local.py
 fi
-exec .venv/bin/python app.py
+url="http://127.0.0.1:5084/login"
+.venv/bin/python app.py &
+app_pid=$!
+trap 'kill "$app_pid" 2>/dev/null || true; wait "$app_pid" 2>/dev/null || true' EXIT INT TERM
+for _ in $(seq 1 60); do
+  if ! kill -0 "$app_pid" 2>/dev/null; then
+    wait "$app_pid"
+  fi
+  if curl --silent --show-error --fail "$url" -o /dev/null 2>/dev/null; then
+    if command -v xdg-open >/dev/null 2>&1; then xdg-open "$url" >/dev/null 2>&1 || true; fi
+    break
+  fi
+  sleep 0.5
+done
+wait "$app_pid"

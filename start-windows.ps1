@@ -14,14 +14,28 @@ $venv = Join-Path $PSScriptRoot ".venv/Scripts/python.exe"
 if ($LASTEXITCODE -ne 0) { throw "No se pudieron instalar las dependencias." }
 if (-not (Test-Path ".env")) {
   Write-Host "Primera ejecucion. PostgreSQL debe estar instalado y en marcha."
-  $adminDsn = Read-Host "DSN de administrador PostgreSQL (ej.: host=localhost port=5432 dbname=postgres user=postgres password=...)"
+  $secureDsn = Read-Host "DSN de administrador PostgreSQL (entrada oculta)" -AsSecureString
+  $adminDsn = [System.Net.NetworkCredential]::new("", $secureDsn).Password
   if ([string]::IsNullOrWhiteSpace($adminDsn)) { throw "Falta el DSN." }
   $env:POSTGRES_ADMIN_DSN = $adminDsn
   try {
     & $venv setup_windows.py
     if ($LASTEXITCODE -ne 0) { throw "Inicializacion fallida; revisa la base antes de reintentar." }
-  } finally { Remove-Item Env:POSTGRES_ADMIN_DSN -ErrorAction SilentlyContinue }
+  } finally {
+    Remove-Item Env:POSTGRES_ADMIN_DSN -ErrorAction SilentlyContinue
+    Remove-Variable adminDsn, secureDsn -ErrorAction SilentlyContinue
+  }
 }
-Write-Host "Abre http://127.0.0.1:5084 ; Ctrl+C para detener la aplicacion."
-& $venv app.py
-exit $LASTEXITCODE
+$url = "http://127.0.0.1:5084/login"
+$browserJob = Start-Job -ArgumentList $url -ScriptBlock {
+  param($target)
+  for ($i = 0; $i -lt 60; $i++) {
+    try {
+      $response = Invoke-WebRequest -Uri $target -TimeoutSec 2 -UseBasicParsing
+      if ($response.StatusCode -ge 200) { Start-Process $target; break }
+    } catch { Start-Sleep -Milliseconds 500 }
+  }
+}
+Write-Host "Iniciando AgroTrack; se abrira el navegador cuando responda. Ctrl+C para detener."
+try { & $venv app.py; exit $LASTEXITCODE }
+finally { Stop-Job $browserJob -ErrorAction SilentlyContinue; Remove-Job $browserJob -Force -ErrorAction SilentlyContinue }
