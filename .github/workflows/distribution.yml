@@ -1,0 +1,94 @@
+name: Pruebas y distribución
+on:
+  push:
+    branches: [main, 'feat/cross-platform-distribution']
+    tags: ['cross-v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-22.04
+            platform: linux
+          - runner: windows-2025
+            platform: windows
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 25
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Instalar PostgreSQL en Linux
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql
+          pg_config --bindir >> "$GITHUB_PATH"
+      - name: Ubicar PostgreSQL en Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $server = Get-ChildItem "$env:ProgramFiles/PostgreSQL" -Directory | Sort-Object { [version]($_.Name + '.0') } -Descending | Select-Object -First 1
+          if (-not $server -or -not (Test-Path "$($server.FullName)/bin/initdb.exe")) { throw "PostgreSQL no está disponible en el runner." }
+          "$($server.FullName)\bin" | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+      - name: Empaquetar AgroTrack
+        run: |
+          python -m pip install -r requirements.txt pyinstaller==6.22.3
+          python -m PyInstaller --noconfirm --clean --name AgroTrack --add-data 'templates:templates' --add-data 'static:static' --add-data 'sql:sql' --collect-all psycopg_binary app.py
+          cp pack/Iniciar-AgroTrack.* DISTRIBUCION.md dist/AgroTrack/
+          mkdir -p downloads
+      - name: Pruebas de integración y paquete
+        env:
+          PYTHONUTF8: '1'
+        run: |
+          filename=AgroTrack
+          if [[ "$RUNNER_OS" == Windows ]]; then filename+=.exe; fi
+          python pack/check_distribution.py "dist/AgroTrack/$filename"
+      - name: Archivar paquete Linux
+        if: runner.os == 'Linux'
+        run: |
+          tar -czf downloads/AgroTrack-linux-x64.tar.gz -C dist AgroTrack
+          tar -tzf downloads/AgroTrack-linux-x64.tar.gz >/dev/null
+      - name: Archivar paquete Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          tar.exe -a -cf downloads/AgroTrack-windows-x64.zip -C dist AgroTrack
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          tar.exe -tf downloads/AgroTrack-windows-x64.zip | Out-Null
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AgroTrack-${{ matrix.platform }}-x64
+          path: downloads/*
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/cross-v')
+    needs: build
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+      - name: Publicar paquetes verificados
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          test "$(find release-assets -maxdepth 1 -type f | wc -l)" -eq 2
+          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --verify-tag --generate-notes release-assets/*
